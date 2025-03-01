@@ -58,7 +58,53 @@ Game2048.prototype.updateTimer = function () {
         document.getElementById('game-over-message').style.display = 'block';
         document.getElementById('game-over-message').innerHTML = '<h1>Game Over!</h1><button id="restart-button">Play Again</button>';
         document.getElementById('restart-button').addEventListener('click', this.init.bind(this));
+        this.saveScore();
+        this.fetchHighScores();
     }
+};
+
+Game2048.prototype.saveScore = function () {
+    var playerName = prompt("Enter your name:");
+    var score = this.getScore(); // Assuming there's a method that returns the current score
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "Game2048Servlet", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            console.log("Score saved successfully");
+        }
+    };
+    xhr.send("playerName=" + playerName + "&score=" + score);
+};
+
+Game2048.prototype.fetchHighScores = function () {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "Game2048Servlet", true);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var highScores = JSON.parse(xhr.responseText);
+            var highScoresContainer = document.getElementById('high-scores');
+            highScoresContainer.innerHTML = "<h2>Top 10 High Scores</h2>";
+
+            highScores.forEach(function (scoreEntry) {
+                var scoreElement = document.createElement('p');
+                scoreElement.innerText = scoreEntry.player_name + ": " + scoreEntry.score;
+                highScoresContainer.appendChild(scoreElement);
+            });
+        }
+    };
+    xhr.send();
+};
+
+Game2048.prototype.getScore = function () {
+    var score = 0;
+    for (var i = 0; i < this.size; i++) {
+        for (var j = 0; j < this.size; j++) {
+            score += this.grid[i][j];
+        }
+    }
+    return score;
 };
 
 Game2048.prototype.addTile = function () {
@@ -66,12 +112,14 @@ Game2048.prototype.addTile = function () {
     for (var i = 0; i < this.size; i++) {
         for (var j = 0; j < this.size; j++) {
             if (this.grid[i][j] === 0) {
-                emptyTiles.push({x: i, y: j});
+                emptyTiles.push({ x: i, y: j });
             }
         }
     }
-    var randomTile = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
-    this.grid[randomTile.x][randomTile.y] = Math.random() > 0.9 ? 4 : 2;
+    if (emptyTiles.length > 0) {
+        var randomTile = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+        this.grid[randomTile.x][randomTile.y] = Math.random() > 0.9 ? 4 : 2;
+    }
 };
 
 Game2048.prototype.move = function (direction) {
@@ -141,6 +189,8 @@ Game2048.prototype.move = function (direction) {
             document.getElementById('game-over-message').style.display = 'block';
             document.getElementById('game-over-message').innerHTML = '<h1>Game Over!</h1><button id="restart-button">Play Again</button>';
             document.getElementById('restart-button').addEventListener('click', this.init.bind(this));
+            this.saveScore();
+            this.fetchHighScores();
         }
     }
 };
@@ -178,4 +228,3 @@ Game2048.prototype.canMove = function () {
     }
     return false;
 };
-
