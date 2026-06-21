@@ -55,7 +55,7 @@ Game2048.prototype.updateTimer = function () {
     if (this.timeLeft <= 0) {
         clearInterval(this.timer);
         this.gameOver = true;
-        document.getElementById('game-over-message').style.display = 'block';
+        document.getElementById('game-over-message').style.display = 'flex';
         document.getElementById('game-over-message').innerHTML = '<h1>Game Over!</h1><button id="restart-button">Play Again</button>';
         document.getElementById('restart-button').addEventListener('click', this.init.bind(this));
         this.saveScore();
@@ -86,12 +86,15 @@ Game2048.prototype.fetchHighScores = function () {
             var highScores = JSON.parse(xhr.responseText);
             var highScoresContainer = document.getElementById('high-scores');
             highScoresContainer.innerHTML = "<h2>Top 10 High Scores</h2>";
+            var list = document.createElement('ol');
+            list.className = 'score-list';
 
             highScores.forEach(function (scoreEntry) {
-                var scoreElement = document.createElement('p');
-                scoreElement.innerText = scoreEntry.player_name + ": " + scoreEntry.score;
-                highScoresContainer.appendChild(scoreElement);
+                var li = document.createElement('li');
+                li.innerHTML = "<span class='player-name'>" + escapeHtml(scoreEntry.player_name) + "</span><span class='player-score'>" + scoreEntry.score + "</span>";
+                list.appendChild(li);
             });
+            highScoresContainer.appendChild(list);
         }
     };
     xhr.send();
@@ -186,7 +189,7 @@ Game2048.prototype.move = function (direction) {
         if (!this.canMove()) {
             this.gameOver = true;
             clearInterval(this.timer);
-            document.getElementById('game-over-message').style.display = 'block';
+            document.getElementById('game-over-message').style.display = 'flex';
             document.getElementById('game-over-message').innerHTML = '<h1>Game Over!</h1><button id="restart-button">Play Again</button>';
             document.getElementById('restart-button').addEventListener('click', this.init.bind(this));
             this.saveScore();
@@ -228,3 +231,12 @@ Game2048.prototype.canMove = function () {
     }
     return false;
 };
+
+function escapeHtml(unsafe) {
+    return (unsafe || "").toString()
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
