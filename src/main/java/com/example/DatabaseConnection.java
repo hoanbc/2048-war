@@ -1,23 +1,44 @@
 package com.example;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 public class DatabaseConnection {
-    private static final String URL = "jdbc:mysql://10.200.12.238:3306/game_scores";
-    private static final String USER = "game_scores_username";
-    private static final String PASSWORD = "game_scores_password";
+    private static HikariDataSource dataSource;
 
     static {
         try {
+            Properties props = new Properties();
+            try (InputStream input = DatabaseConnection.class.getClassLoader().getResourceAsStream("config.properties")) {
+                if (input == null) {
+                    throw new RuntimeException("Sorry, unable to find config.properties");
+                }
+                props.load(input);
+            }
+
             Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load MySQL driver", e);
+
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(props.getProperty("db.url"));
+            config.setUsername(props.getProperty("db.user"));
+            config.setPassword(props.getProperty("db.password"));
+            
+            // Pool config
+            config.setMaximumPoolSize(10);
+            config.setMinimumIdle(2);
+
+            dataSource = new HikariDataSource(config);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize database connection pool", e);
         }
     }
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+        return dataSource.getConnection();
     }
 }
