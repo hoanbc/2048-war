@@ -3,7 +3,7 @@
 # Runtime-only image. Assumes the fat JAR is already built by Jenkins
 # (mvn package) and available under target/ before `docker build` runs.
 
-FROM eclipse-temurin:17-jre AS runtime
+FROM eclipse-temurin:11-jre AS runtime
 WORKDIR /app
 
 # Run as a non-root user for security
