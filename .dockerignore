@@ -1,0 +1,18 @@
+# NOTE: target/ is intentionally NOT ignored because the Dockerfile
+# copies the pre-built JAR from target/ (built by Jenkins).
+# Ignore everything else that isn't needed in the build context.
+target/classes/
+target/test-classes/
+target/maven-*/
+target/surefire-reports/
+target/site/
+target/generated-*/
+.git/
+.gitignore
+*.md
+docs/
+.idea/
+*.iml
+.vscode/
+src/
+dependency-reduced-pom.xml
