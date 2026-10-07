@@ -9,7 +9,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jacoco.version>0.8.12</jacoco.version>
+        <jacoco.version>0.8.14</jacoco.version>
+        <!-- Default rong de @{argLine} khong loi khi JaCoCo bi skip; JaCoCo prepare-agent se ghi de -->
+        <argLine></argLine>
         <!-- SonarQube doc bao cao coverage tu file XML cua JaCoCo -->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
@@ -60,14 +62,14 @@
     </dependency>
     <dependency>
         <groupId>org.mockito</groupId>
-        <artifactId>mockito-inline</artifactId>
-        <version>4.5.1</version>
+        <artifactId>mockito-core</artifactId>
+        <version>5.14.2</version>
         <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-junit-jupiter</artifactId>
-        <version>4.5.1</version>
+        <version>5.14.2</version>
         <scope>test</scope>
     </dependency>
     <!-- In-memory DB cho unit test DAO / DatabaseConnection -->
@@ -99,11 +101,29 @@
                 <encoding>UTF-8</encoding>
             </configuration>
         </plugin>
+        <!-- Expose ${org.mockito:mockito-core:jar} so Mockito can be loaded as a javaagent (JDK 21+) -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>3.6.1</version>
+            <executions>
+                <execution>
+                    <id>get-mockito-agent</id>
+                    <goals>
+                        <goal>properties</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
         <!-- Surefire 3.x de chay JUnit 5 (ban mac dinh 2.12 khong chay JUnit 5) -->
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <version>3.2.5</version>
+            <configuration>
+                <!-- @{argLine} keeps the JaCoCo agent; without it coverage is 0% -->
+                <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Dnet.bytebuddy.experimental=true</argLine>
+            </configuration>
         </plugin>
         <plugin>
             <groupId>org.jacoco</groupId>
