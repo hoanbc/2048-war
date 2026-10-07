@@ -11,6 +11,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.SQLException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -129,6 +131,47 @@ public class Game2048ServletTest {
         assertTrue(responseContent.contains("2048"));
         
         verify(response).setContentType("application/json");
+    }
+
+    @Test
+    public void testDoPostSetsJsonResponseHeaders() throws Exception {
+        when(request.getParameter("playerName")).thenReturn("TestPlayer");
+        when(request.getParameter("score")).thenReturn("1024");
+
+        servlet.doPost(request, response);
+
+        verify(response).setContentType("application/json");
+        verify(response).setCharacterEncoding("UTF-8");
+        verify(response, never()).setStatus(anyInt());
+    }
+
+    @Test
+    public void testDoPostNegativeScoreIsAccepted() throws Exception {
+        when(request.getParameter("playerName")).thenReturn("TestPlayer");
+        when(request.getParameter("score")).thenReturn("-5");
+
+        servlet.doPost(request, response);
+
+        verify(mockDao).saveScore("TestPlayer", -5);
+        printWriter.flush();
+        assertTrue(stringWriter.toString().contains("success"));
+    }
+
+    @Test
+    public void testDoGetEmptyHighScores() throws Exception {
+        when(mockDao.getHighScores(10)).thenReturn(new JSONArray());
+
+        servlet.doGet(request, response);
+
+        printWriter.flush();
+        assertEquals("[]", stringWriter.toString());
+        verify(response, never()).setStatus(anyInt());
+    }
+
+    @Test
+    public void testDefaultConstructorCreatesServlet() {
+        Game2048Servlet defaultServlet = new Game2048Servlet();
+        assertNotNull(defaultServlet);
     }
 
     @Test
